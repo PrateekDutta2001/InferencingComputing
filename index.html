@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Beyond Token Count — a visual overview of three independent axes of LLM inference compute: parallel sampling, tree search, and self-consistency." />
+  <meta name="theme-color" content="#0E3B3F" />
+  <title>Beyond Token Count — Inference Compute Axes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="Beyond Token Count home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">Beyond Token Count</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#axes">Three Axes</a>
+        <a href="#framework">Framework</a>
+        <a class="nav-cta" href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">View Paper</a>
+      </nav>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <div id="mobile-nav" class="mobile-nav" hidden>
+      <a href="#overview">Overview</a>
+      <a href="#axes">Three Axes</a>
+      <a href="#framework">Framework</a>
+      <a href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">View Paper (PDF)</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-atmosphere" aria-hidden="true"></div>
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <p class="brand-signal">Beyond Token Count</p>
+          <h1 id="hero-title">Three ways models spend inference compute — and why they are not the same.</h1>
+          <p class="hero-lede">
+            A technical review by
+            <a class="author-link" href="https://prateekdutta2001.github.io/PrateekDutta.in/" target="_blank" rel="noopener noreferrer">Prateek Dutta</a>
+            that separates parallel sampling, tree search, and self-consistency into independent axes of test-time compute.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">View Paper</a>
+            <a class="btn btn-ghost" href="#axes">Explore the axes</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <p class="hero-visual-caption">Live sketch of the three-axis framework</p>
+          <canvas id="hero-canvas" width="900" height="720"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="section overview" id="overview" aria-labelledby="overview-title">
+      <div class="shell narrow">
+        <p class="eyebrow">Paper context</p>
+        <h2 id="overview-title">From training laws to test-time compute</h2>
+        <p>
+          For years, progress in language models was framed by training-compute scaling. The rise of reasoning models such as OpenAI’s o-series and DeepSeek-R1 shifted attention to <em>inference-time</em> compute: accuracy that improves when a model is allowed to “think longer” at answer time.
+        </p>
+        <p>
+          The literature often collapses that idea into a single “more test-time compute” curve. This review argues that the gain can come from different mechanisms — more samples, deeper search, or voting over answers — each with its own cost–accuracy tradeoff, failure mode, and task affinity.
+        </p>
+        <ul class="overview-points">
+          <li><strong>Contribution.</strong> A three-axis taxonomy of inference compute, not a new empirical benchmark.</li>
+          <li><strong>Scope.</strong> Critical synthesis of roughly forty studies (2023–2026), with a comparison table and open-problems agenda.</li>
+          <li><strong>Takeaway.</strong> Scaling behavior differs meaningfully across axes and task types; conflating them hides the mechanism.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section axes" id="axes" aria-labelledby="axes-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Core concepts</p>
+          <h2 id="axes-title">Three independent axes</h2>
+          <p class="section-lede">Watch each mechanism spend compute differently. Use the controls on small screens; on larger screens the diagrams animate as they enter view.</p>
+        </div>
+
+        <article class="axis" id="axis-parallel" data-axis="parallel">
+          <div class="axis-copy">
+            <p class="axis-index">Axis 01</p>
+            <h3>Parallel sampling <span>(best-of-<em>n</em>)</span></h3>
+            <p>
+              Draw many independent solutions at once, then pick the best with a reward model, verifier, or exact checker (unit tests, proof assistant). Cost grows with sample count; realized accuracy is coverage filtered by selector quality.
+            </p>
+            <dl class="axis-meta">
+              <div><dt>Accuracy driver</dt><dd>Coverage × verifier precision</dd></div>
+              <div><dt>Helps most</dt><dd>Code, proofs, math with strong checkers</dd></div>
+              <div><dt>Failure mode</dt><dd>False positives accumulate as <em>n</em> grows</dd></div>
+            </dl>
+            <button class="btn btn-soft replay" type="button" data-replay="parallel">Replay animation</button>
+          </div>
+          <div class="axis-stage" role="img" aria-label="Animated diagram of parallel sampling and best-of-n selection">
+            <canvas id="canvas-parallel" width="640" height="420"></canvas>
+          </div>
+        </article>
+
+        <article class="axis axis-flip" id="axis-tree" data-axis="tree">
+          <div class="axis-copy">
+            <p class="axis-index">Axis 02</p>
+            <h3>Tree / graph search</h3>
+            <p>
+              Expand intermediate reasoning steps as a tree (or graph), score partial states, and allocate budget to promising branches — Tree-of-Thoughts, MCTS-guided decoding, step-level beam search. Structure matters; sample count alone does not.
+            </p>
+            <dl class="axis-meta">
+              <div><dt>Accuracy driver</dt><dd>Value estimates for prune &amp; expand</dd></div>
+              <div><dt>Helps most</dt><dd>Planning, multi-step math, agent tasks</dd></div>
+              <div><dt>Failure mode</dt><dd>Weak value model wastes FLOPs vs sampling</dd></div>
+            </dl>
+            <button class="btn btn-soft replay" type="button" data-replay="tree">Replay animation</button>
+          </div>
+          <div class="axis-stage" role="img" aria-label="Animated diagram of tree search expanding and pruning nodes">
+            <canvas id="canvas-tree" width="640" height="420"></canvas>
+          </div>
+        </article>
+
+        <article class="axis" id="axis-vote" data-axis="vote">
+          <div class="axis-copy">
+            <p class="axis-index">Axis 03</p>
+            <h3>Self-consistency <span>(majority voting)</span></h3>
+            <p>
+              Sample many chain-of-thought paths and return the most common final answer — no external scorer and no search tree. Gains come from answer concentration; the method saturates once the modal answer is fixed.
+            </p>
+            <dl class="axis-meta">
+              <div><dt>Accuracy driver</dt><dd>Concentration on the correct mode</dd></div>
+              <div><dt>Helps most</dt><dd>Arithmetic, multiple choice, short answers</dd></div>
+              <div><dt>Failure mode</dt><dd>Saturates; can amplify a wrong majority</dd></div>
+            </dl>
+            <button class="btn btn-soft replay" type="button" data-replay="vote">Replay animation</button>
+          </div>
+          <div class="axis-stage" role="img" aria-label="Animated diagram of self-consistency majority voting">
+            <canvas id="canvas-vote" width="640" height="420"></canvas>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section framework" id="framework" aria-labelledby="framework-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Cross-axis view</p>
+          <h2 id="framework-title">Allocate compute along each dimension</h2>
+          <p class="section-lede">Most recent high-performing methods sit in the interior as hybrids. The paper’s original contribution is a gap analysis and a factorial study design that would finally measure each axis in isolation.</p>
+        </div>
+        <div class="framework-panel">
+          <canvas id="canvas-framework" width="960" height="560" aria-label="Three-axis framework diagram"></canvas>
+          <aside class="framework-notes">
+            <h3>What the paper asks next</h3>
+            <ol>
+              <li>A shared cost metric (tokens, FLOPs, latency, dollars).</li>
+              <li>Ablations that vary one axis while holding others fixed.</li>
+              <li>Verifier quality isolated from the search or sampling method.</li>
+              <li>A task taxonomy that predicts which axis scales best.</li>
+            </ol>
+            <a class="btn btn-primary" href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">Read the full review</a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section closing" aria-labelledby="closing-title">
+      <div class="shell narrow closing-inner">
+        <h2 id="closing-title">Open the paper</h2>
+        <p>
+          Seven pages of structured comparison, a method × cost × failure-mode table, and an open-problems agenda for a follow-on empirical study.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">View Paper (PDF)</a>
+          <a class="btn btn-ghost" href="#top">Back to top</a>
+        </div>
+        <p class="byline">
+          <a class="author-link" href="https://prateekdutta2001.github.io/PrateekDutta.in/" target="_blank" rel="noopener noreferrer">Prateek Dutta</a>
+          · Industrial AI Researcher, India
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <p>
+        Companion explainer for <cite>Beyond Token Count</cite>.
+        <a href="Review_BeyondTokenCount.pdf" target="_blank" rel="noopener noreferrer">View PDF</a>
+      </p>
+      <p class="footer-credit">
+        © 2026
+        <a class="author-link" href="https://prateekdutta2001.github.io/PrateekDutta.in/" target="_blank" rel="noopener noreferrer">Prateek Dutta</a>.
+        All rights reserved.
+        <span class="footer-city">Bengaluru, Karnataka</span>
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
