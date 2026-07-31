@@ -361,6 +361,40 @@ a:hover { color: var(--amber); }
   text-decoration-color: var(--teal);
 }
 
+.doi-line {
+  margin: 1rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+
+.doi-line a {
+  font-weight: 600;
+  color: var(--teal-deep);
+  text-decoration: none;
+}
+
+.doi-line a:hover {
+  color: var(--amber);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.doi-badge {
+  display: inline-flex;
+  margin-top: 0.35rem;
+  line-height: 0;
+}
+
+.doi-badge img {
+  height: 20px;
+  width: auto;
+}
+
+.closing-inner .doi-line {
+  margin-top: 1rem;
+}
+
 /* Sections */
 .section {
   padding: clamp(3.5rem, 8vw, 6rem) 0;
